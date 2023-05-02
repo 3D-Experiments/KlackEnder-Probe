@@ -110,6 +110,11 @@ position_endstop: -8
 #### Add new config:
 
 **Don't forgot to edit your probe Pin:**
+
+**If you following modbot or other using include [Klackender.cfg], the SAVE_CONFIG didn't work, Klipper will show "SAVE_CONFIG section 'probe' option 'z_offset' conflicts with included value", you need to put "probe: z_offset: the number" into KlackEnder.cfg z-offset, this number will show up after you click save in the z-offset section.**
+
+**Or copy the KlackEnder config into the printer.cfg:**
+
   ```
   ##################################
 ## Add this to your printer.cfg ##
