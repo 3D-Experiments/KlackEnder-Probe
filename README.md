@@ -96,6 +96,12 @@ endstop_pin: probe:z_virtual_endstop #if you want to use the Prove as z-endstop 
 #position_endstop: 0 #remove this or uncomment it with a #
 position_min: -8 # set a negative value (minimum as the probe z_offset)
 
+
+[stepper_x]
+position_max: 250 #Your printhead have to move all the way to the right to pickup the probe. If your screw collides with the metal plate, simply flip it around.
+
+
+##Following does not apply for the E3-V2##
 [stepper_y]
 position_min: -8 #most Ender 3 configs have this wrong. Between the nozzle and the bed is a gap of 8mm (Y dimension) when the printer is homed. If not adapt this and the -8 in the Probe_In Makro). 
 position_endstop: -8
@@ -104,6 +110,11 @@ position_endstop: -8
 #### Add new config:
 
 **Don't forgot to edit your probe Pin:**
+
+**If you following modbot or other using include [Klackender.cfg], the SAVE_CONFIG didn't work, Klipper will show "SAVE_CONFIG section 'probe' option 'z_offset' conflicts with included value", you need to put "probe: z_offset: the number" into KlackEnder.cfg z-offset, this number will show up after you click save in the z-offset section.**
+
+**Or copy the KlackEnder config into the printer.cfg:**
+
   ```
   ##################################
 ## Add this to your printer.cfg ##
@@ -265,7 +276,7 @@ gcode:
 
 
 #####################################################################
-# KlackEnder- Menu
+# KlackEnder- Menu - Only if you have a display installed!
 #####################################################################
 
 [menu __main]
@@ -306,8 +317,10 @@ Marlin will now include a probe deploy and stow option under the motion menu whe
 
 - Search for ```//#define USE_PROBE_FOR_Z_HOMING``` and uncomment by removing ```//``` before ```#define```
 - Search for ```#define PROBE_MANUALLY``` and if not commented out with ```//``` comment it out with ```//```
+- If you have plugged your Probe into the Z-Endstop you will need to uncomment ```//#define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN```
+  If you have plugged your Probe into the probe port on your board you don't need to touch this.
 
-- Search for ``` //#define MAG_MOUNTED_PROBE``` (line 1349) uncomment by removing the ```//```
+- Search for ``` //#define MAG_MOUNTED_PROBE```  uncomment by removing the ```//```
   and change the following lines to
   ```
   #define MAG_MOUNTED_DEPLOY_1 { PROBE_DEPLOY_FEEDRATE, { 245, 114, 20 } }  // Move to side Dock / Attach probe
@@ -317,8 +330,8 @@ Marlin will now include a probe deploy and stow option under the motion menu whe
   //#define MAG_MOUNTED_DEPLOY_5 { PROBE_DEPLOY_FEEDRATE, {   0,   0,  0 } }  // Extra move if needed
   #define MAG_MOUNTED_STOW_1   { PROBE_STOW_FEEDRATE,   { 245, 114, 20 } }  // Move to dock
   #define MAG_MOUNTED_STOW_2   { PROBE_STOW_FEEDRATE,   { 245, 114,  0 } }  // Place probe beside remover
-  #define MAG_MOUNTED_STOW_3   { PROBE_STOW_FEEDRATE,   { 240, 114,  0 } }  // Side move to remove probe
-  #define MAG_MOUNTED_STOW_4   { PROBE_STOW_FEEDRATE,   { 240, 114, 20 } }  // Ensure probe is off
+  #define MAG_MOUNTED_STOW_3   { PROBE_STOW_FEEDRATE,   { 220, 114,  0 } }  // Side move to remove probe
+  #define MAG_MOUNTED_STOW_4   { PROBE_STOW_FEEDRATE,   { 220, 114, 20 } }  // Ensure probe is off
   //#define MAG_MOUNTED_STOW_5   { PROBE_STOW_FEEDRATE,   {   0,   0,  0 } }  // Extra move if needed
   ```
   Probe deploy and stow feed rate can be changed by editing the appropriate lines
@@ -343,7 +356,7 @@ Marlin will now include a probe deploy and stow option under the motion menu whe
   #define PROBING_MARGIN 15   //--> more clearance to the sides of the bed.
   ```
  
-- Search for ```// @section machine```  and change
+- Search for ```// @section geometry```  and change
   ```
   // The size of the printable area
   #define X_BED_SIZE 200
@@ -423,18 +436,19 @@ Marlin will now include a probe deploy and stow option under the motion menu whe
   //#define ENABLE_LEVELING_AFTER_G28
   ```
  
-- Search for ```Unified Bed Leveling```
-  Change  from ```#define MESH_INSET 1```
-  to ```#define MESH_INSET 10```
- 
-  Change   ```#define GRID_MAX_POINTS_X 10```  
-  to ```#define GRID_MAX_POINTS_X 15```  
-  Uncomment line 1954 by removing the ```//``` before ```#define UBL_MESH_WIZARD```  
-  Uncomment line 1974 ```//#define LCD_BED_LEVELING```  
-  Uncomment Line 1983 ```//#define LCD_BED_TRAMMING```  
-  Uncomment Line 1990 ```//#define BED_TRAMMING_USE_PROBE```  
-  Uncomment Line 2048 ```//#define Z_SAFE_HOMING```
-  Uncomment Line 2138 ```//#define EEPROM_INIT_NOW   // Init EEPROM on first boot after a new build```  
+- Search for ```Unified Bed Leveling```  
+  Change  from ```#define MESH_INSET 1``` to ```#define MESH_INSET 10```
+  Change   ```#define GRID_MAX_POINTS_X 10``` to ```#define GRID_MAX_POINTS_X 15```  
+  Uncomment  by removing the ```//``` before ```#define UBL_MESH_WIZARD```  
+  Uncomment  ```//#define LCD_BED_LEVELING```  
+  Uncomment  ```//#define LCD_BED_TRAMMING```  
+  Uncomment  ```//#define BED_TRAMMING_USE_PROBE```  
+  Uncomment  ```//#define Z_SAFE_HOMING```  
+  Uncomment  ```//#define EEPROM_INIT_NOW   // Init EEPROM on first boot after a new build```  
+  
+  
+ - In Configuration_adv.H
+  Uncomment ```//#define PROBE_OFFSET_WIZARD```
   
   
   ## Marlin Setup Before printing
@@ -447,6 +461,7 @@ Marlin will now include a probe deploy and stow option under the motion menu whe
   after that line add in the following two lines
   ```
   G29 L0 ; load mesh saved in slot 0 which is the default slot
+  G29 A ; activate bed mesh leveling.
   G29 J ; Probe 3 points and tilt the mesh loaded in slot 0 to match the current bed tilt
   ```
 
